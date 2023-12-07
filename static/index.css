@@ -1,0 +1,34 @@
+.center{
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.central-text{
+    font-size: 7vw;
+    font-family: sans-serif;
+}
+.bottom-center{
+    position: fixed;
+    bottom: 0%;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+.bottom-text{
+    font-size: 130%;
+    font-family: sans-serif;
+}
+.logo{
+    position: relative;
+    display: inline;
+    height: 1em;
+    width: auto;
+    transform:translate(0, 0.1em);
+    top: 3px;
+}
+.heart-emoji{
+    display: inline-block;
+    height: 0.8em;
+    width: auto;
+}

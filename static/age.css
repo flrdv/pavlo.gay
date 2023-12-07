@@ -1,0 +1,22 @@
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    font-family: sans-serif;
+}
+.center{
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.fixedTextPosition{
+    text-align: left;
+    align-items: left;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: auto auto;
+    width: auto;
+}
