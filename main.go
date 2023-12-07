@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"github.com/indigo-web/indigo"
 	"github.com/indigo-web/indigo/http"
 	"github.com/indigo-web/indigo/http/status"
@@ -12,11 +13,13 @@ import (
 )
 
 const (
-	addr            = ":8080"
+	defaultAddr     = ":80"
 	homeTmpl        = "home"
 	homeTmplPath    = "templates/index.html"
 	homeDefaultName = "Паша"
 )
+
+var addr = flag.String("addr", defaultAddr, "addr - address to bind the application")
 
 func Index(request *http.Request) *http.Response {
 	tmpl, ok := request.Ctx.Value(homeTmpl).(*template.Template)
@@ -38,6 +41,8 @@ func Index(request *http.Request) *http.Response {
 }
 
 func main() {
+	flag.Parse()
+
 	tmpl, err := template.ParseFiles(homeTmplPath)
 	if err != nil {
 		log.Fatalf("cannot load home template: %s", err)
@@ -52,7 +57,8 @@ func main() {
 		Static("/static", "static").
 		Alias("/age", "/static/age.html")
 
-	app := indigo.NewApp(addr)
+	app := indigo.NewApp(*addr)
+	log.Printf("Running on %s\n", *addr)
 	if err = app.Serve(r); err != nil {
 		log.Fatal(err)
 	}
