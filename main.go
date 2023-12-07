@@ -26,7 +26,7 @@ var (
 	addr = flag.String(
 		"addr", defaultAddr, "address to bind the application",
 	)
-	https = flag.Bool("tls", false, "enable HTTPS")
+	https = flag.Bool("https", false, "enable HTTPS")
 	cert  = flag.String(
 		"cert", "", "specify TLS certificate path",
 	)
