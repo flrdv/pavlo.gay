@@ -8,18 +8,35 @@ import (
 	"github.com/indigo-web/indigo/http/status"
 	"github.com/indigo-web/indigo/router/inbuilt"
 	"github.com/indigo-web/indigo/router/inbuilt/middleware"
+	"github.com/indigo-web/indigo/settings"
 	"html/template"
 	"log"
+	"math"
 )
 
 const (
-	defaultAddr     = ":80"
-	homeTmpl        = "home"
-	homeTmplPath    = "templates/index.html"
-	homeDefaultName = "Паша"
+	defaultAddr      = ":80"
+	defaultHTTPSPort = 443
+	homeTmpl         = "home"
+	homeTmplPath     = "templates/index.html"
+	homeDefaultName  = "Паша"
 )
 
-var addr = flag.String("addr", defaultAddr, "addr - address to bind the application")
+var (
+	addr = flag.String(
+		"addr", defaultAddr, "address to bind the application",
+	)
+	https = flag.Bool("tls", false, "enable HTTPS")
+	cert  = flag.String(
+		"cert", "", "specify TLS certificate path",
+	)
+	key = flag.String(
+		"key", "", "specify TLS private key path",
+	)
+	httpsPort = flag.Int(
+		"httpsport", 0, "HTTPS port to bind the application",
+	)
+)
 
 func Index(request *http.Request) *http.Response {
 	tmpl, ok := request.Ctx.Value(homeTmpl).(*template.Template)
@@ -43,6 +60,10 @@ func Index(request *http.Request) *http.Response {
 func main() {
 	flag.Parse()
 
+	if *httpsPort < 0 || *httpsPort > math.MaxUint16 {
+		log.Fatalf("bad https port: %d", *httpsPort)
+	}
+
 	tmpl, err := template.ParseFiles(homeTmplPath)
 	if err != nil {
 		log.Fatalf("cannot load home template: %s", err)
@@ -57,9 +78,15 @@ func main() {
 		Static("/static", "static").
 		Alias("/age", "/static/age.html")
 
+	s := settings.Default()
+	s.TLS.Enable = *https
+	s.TLS.Cert = *cert
+	s.TLS.Key = *key
+	s.TLS.Port = uint16(*httpsPort)
+
 	app := indigo.NewApp(*addr)
 	log.Printf("Running on %s\n", *addr)
-	if err = app.Serve(r); err != nil {
+	if err = app.Serve(r, s); err != nil {
 		log.Fatal(err)
 	}
 }
