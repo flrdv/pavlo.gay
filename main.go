@@ -15,11 +15,10 @@ import (
 )
 
 const (
-	defaultAddr      = ":80"
-	defaultHTTPSPort = 443
-	homeTmpl         = "home"
-	homeTmplPath     = "templates/index.html"
-	homeDefaultName  = "Паша"
+	defaultAddr     = ":80"
+	homeTmpl        = "home"
+	homeTmplPath    = "templates/index.html"
+	homeDefaultName = "Паша"
 )
 
 var (
