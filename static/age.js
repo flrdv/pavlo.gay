@@ -1,12 +1,16 @@
 let fullYears = document.getElementById('fullYears');
 let decimalYears = document.getElementById('decimalYears');
+const birthday = new Date("2005-01-05T00:00")
 
 function updateTime() {
-    const yearsSinceBirthday = (new Date() - new Date("2005-01-05")) / 3.156e+7 / 1000
-    const decimal = yearsSinceBirthday - parseInt(yearsSinceBirthday)
-    fullYears.innerHTML = "<h2>" + parseInt(yearsSinceBirthday).toString() + "</h2>";
+    const now = new Date()
+    const yearsdelta = (now.getTime() - birthday.getTime()) / 3.154e+10
+    const years = yearsdelta - yearsdelta % 1
+    const decimal = yearsdelta - years
+
+    fullYears.innerHTML = "<h2>" + years.toString() + "</h2>";
     fullYears.style.textAlign = "left"
-    decimalYears.innerHTML = "<h5>." + decimal.toFixed(8).substring(2) + "</h5>";
+    decimalYears.innerHTML = "<h5>" + decimal.toFixed(8).substring(1) + "</h5>";
     decimalYears.style.textAlign = "center"
 }
 
