@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/indigo-web/chunkedbody v0.1.0 // indirect
-	github.com/indigo-web/indigo v0.15.3 // indirect
+	github.com/indigo-web/indigo v0.15.4 // indirect
 	github.com/indigo-web/iter v0.1.0 // indirect
 	github.com/indigo-web/utils v0.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

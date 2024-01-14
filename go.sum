@@ -9,6 +9,8 @@ github.com/indigo-web/indigo v0.13.2 h1:tvL6aBCwisA6+VlbPWxyQc7cTJheBXtVpLM9K/7w
 github.com/indigo-web/indigo v0.13.2/go.mod h1:HHOBk7tqm1ufwojf19LxtkHGXcztcOO1vQQ4cKe6f4Q=
 github.com/indigo-web/indigo v0.15.3 h1:uUmupYZgs/WDGdKqIDb72KCaPKwCxNwHBfKMtcw+DbM=
 github.com/indigo-web/indigo v0.15.3/go.mod h1:vMITYIUVMdq1/0mhQ/BKvwRUIcVaQA3xdRNVWeHm1As=
+github.com/indigo-web/indigo v0.15.4 h1:6Y4t9fHpodYK3Eg6StzJyIK/mm9195dq3UTX3LrGF5w=
+github.com/indigo-web/indigo v0.15.4/go.mod h1:vMITYIUVMdq1/0mhQ/BKvwRUIcVaQA3xdRNVWeHm1As=
 github.com/indigo-web/iter v0.1.0 h1:3LJG319EytEULerDX6meT4xW/lqncIqTnZewsMtiPT4=
 github.com/indigo-web/iter v0.1.0/go.mod h1:hftmhzfi4hpWc715PmXsfMjE1K0FLwznr+iyLxM7wyQ=
 github.com/indigo-web/utils v0.4.0 h1:wpx4iQSP3ao9XCTeEIJu1mbQ3JlN8JVXPdHMvFVqUiw=
