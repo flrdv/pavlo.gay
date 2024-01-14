@@ -8,10 +8,10 @@ import (
 	"github.com/indigo-web/indigo/http/status"
 	"github.com/indigo-web/indigo/router/inbuilt"
 	"github.com/indigo-web/indigo/router/inbuilt/middleware"
-	"github.com/indigo-web/indigo/settings"
 	"html/template"
 	"log"
 	"math"
+	"strings"
 )
 
 const (
@@ -25,15 +25,13 @@ var (
 	addr = flag.String(
 		"addr", defaultAddr, "address to bind the application",
 	)
-	https = flag.Bool("https", false, "enable HTTPS")
-	cert  = flag.String(
-		"cert", "", "specify TLS certificate path",
-	)
-	key = flag.String(
-		"key", "", "specify TLS private key path",
+	https = flag.String(
+		"https", "",
+		"sets HTTPS up. Default value uses auto-https, otherwise comma-separated "+
+			"paths to certificate and key must be provided respectively",
 	)
 	httpsPort = flag.Int(
-		"httpsport", 0, "HTTPS port to bind the application",
+		"httpsport", 443, "HTTPS port to bind the application",
 	)
 )
 
@@ -59,10 +57,6 @@ func Index(request *http.Request) *http.Response {
 func main() {
 	flag.Parse()
 
-	if *httpsPort < 0 || *httpsPort > math.MaxUint16 {
-		log.Fatalf("bad https port: %d", *httpsPort)
-	}
-
 	tmpl, err := template.ParseFiles(homeTmplPath)
 	if err != nil {
 		log.Fatalf("cannot load home template: %s", err)
@@ -77,15 +71,31 @@ func main() {
 		Static("/static", "static").
 		Alias("/age", "/static/age.html")
 
-	s := settings.Default()
-	s.TLS.Enable = *https
-	s.TLS.Cert = *cert
-	s.TLS.Key = *key
-	s.TLS.Port = uint16(*httpsPort)
-
-	app := indigo.NewApp(*addr)
-	log.Printf("Running on %s\n", *addr)
-	if err = app.Serve(r, s); err != nil {
-		log.Fatal(err)
+	if *httpsPort < 0 || *httpsPort > math.MaxUint16 {
+		log.Fatalf("bad https port: %d", *httpsPort)
 	}
+
+	app := indigo.New(*addr)
+
+	if len(*https) == 0 {
+		app.AutoHTTPS(uint16(*httpsPort))
+	} else {
+		cert, key := splitPaths(*https)
+		app.HTTPS(uint16(*httpsPort), cert, key)
+	}
+
+	app.NotifyOnStart(func() {
+		log.Printf("Running on %s\n", *addr)
+	})
+
+	log.Fatal(app.Serve(r))
+}
+
+func splitPaths(paths string) (cert, key string) {
+	files := strings.SplitN(paths, ",", 2)
+	if len(files) < 2 {
+		panic("bad HTTPS cert and key pair")
+	}
+
+	return files[0], files[1]
 }
