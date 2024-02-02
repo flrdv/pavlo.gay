@@ -5,7 +5,6 @@ import (
 	"flag"
 	"github.com/indigo-web/indigo"
 	"github.com/indigo-web/indigo/http"
-	"github.com/indigo-web/indigo/http/status"
 	"github.com/indigo-web/indigo/router/inbuilt"
 	"github.com/indigo-web/indigo/router/inbuilt/middleware"
 	"html/template"
@@ -35,19 +34,18 @@ var (
 	)
 )
 
-func Index(request *http.Request) *http.Response {
-	tmpl, ok := request.Ctx.Value(homeTmpl).(*template.Template)
-	if !ok {
-		return http.Error(request, status.ErrInternalServerError)
-	}
+type Index struct {
+	Tmpl *template.Template
+}
 
+func (i Index) Handler(request *http.Request) *http.Response {
 	name, _ := request.Query.Get("name")
 	if len(name) == 0 {
 		name = homeDefaultName
 	}
 
 	resp := request.Respond()
-	if err := tmpl.Execute(resp, name); err != nil {
+	if err := i.Tmpl.Execute(resp, name); err != nil {
 		return http.Error(request, err)
 	}
 
@@ -62,10 +60,14 @@ func main() {
 		log.Fatalf("cannot load home template: %s", err)
 	}
 
+	index := Index{
+		Tmpl: tmpl,
+	}
+
 	r := inbuilt.New().
 		Use(middleware.LogRequests()).
 		Use(middleware.Recover).
-		Get("/", Index, middleware.CustomContext(
+		Get("/", index.Handler, middleware.CustomContext(
 			context.WithValue(context.Background(), homeTmpl, tmpl),
 		)).
 		Static("/static", "static").
