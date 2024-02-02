@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"github.com/indigo-web/indigo"
 	"github.com/indigo-web/indigo/http"
@@ -67,9 +66,7 @@ func main() {
 	r := inbuilt.New().
 		Use(middleware.LogRequests()).
 		Use(middleware.Recover).
-		Get("/", index.Handler, middleware.CustomContext(
-			context.WithValue(context.Background(), homeTmpl, tmpl),
-		)).
+		Get("/", index.Handler).
 		Static("/static", "static").
 		Alias("/age", "/static/age.html")
 
