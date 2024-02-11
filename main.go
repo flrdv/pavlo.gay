@@ -64,8 +64,9 @@ func main() {
 	}
 
 	r := inbuilt.New().
-		Use(middleware.LogRequests()).
 		Use(middleware.Recover).
+		Use(middleware.HTTPSOnly).
+		Use(middleware.LogRequests()).
 		Get("/", index.Handler).
 		Static("/static", "static").
 		Alias("/age", "/static/age.html")
