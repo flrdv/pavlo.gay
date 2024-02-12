@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/indigo-web/indigo"
 	"github.com/indigo-web/indigo/http"
 	"github.com/indigo-web/indigo/router/inbuilt"
@@ -10,11 +11,11 @@ import (
 	"log"
 	"math"
 	"strings"
+	"sync"
 )
 
 const (
 	defaultAddr     = ":80"
-	homeTmpl        = "home"
 	homeTmplPath    = "templates/index.html"
 	homeDefaultName = "Паша"
 )
@@ -34,40 +35,69 @@ var (
 )
 
 type Index struct {
-	Tmpl *template.Template
+	mu   *sync.RWMutex
+	tmpl *template.Template
+	path string
 }
 
-func (i Index) Handler(request *http.Request) *http.Response {
+func NewIndex(tmplPath string) (*Index, error) {
+	tmpl, err := template.ParseFiles(homeTmplPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot load home template: %s", err)
+	}
+
+	return &Index{
+		mu:   new(sync.RWMutex),
+		tmpl: tmpl,
+		path: tmplPath,
+	}, nil
+}
+
+func (i *Index) Render(request *http.Request) *http.Response {
 	name, _ := request.Query.Get("name")
 	if len(name) == 0 {
 		name = homeDefaultName
 	}
 
 	resp := request.Respond()
-	if err := i.Tmpl.Execute(resp, name); err != nil {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+	if err := i.tmpl.Execute(resp, name); err != nil {
 		return http.Error(request, err)
 	}
 
 	return resp
 }
 
-func main() {
-	flag.Parse()
+func (i *Index) ReloadTemplate(request *http.Request) *http.Response {
+	i.mu.Lock()
+	defer i.mu.Unlock()
 
 	tmpl, err := template.ParseFiles(homeTmplPath)
 	if err != nil {
-		log.Fatalf("cannot load home template: %s", err)
+		return http.Error(request, err)
 	}
 
-	index := Index{
-		Tmpl: tmpl,
+	i.tmpl = tmpl
+
+	return http.String(request, "reloaded the template successfully")
+}
+
+func main() {
+	flag.Parse()
+
+	index, err := NewIndex(homeTmplPath)
+	if err != nil {
+		log.Fatalf("index: %s", err)
+		return
 	}
 
 	r := inbuilt.New().
 		Use(middleware.Recover).
 		Use(middleware.HTTPSOnly).
 		Use(middleware.LogRequests()).
-		Get("/", index.Handler).
+		Get("/", index.Render).
+		Get("/reload-template", index.ReloadTemplate).
 		Static("/static", "static").
 		Alias("/age", "/static/age.html")
 
