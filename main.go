@@ -94,7 +94,6 @@ func main() {
 
 	r := inbuilt.New().
 		Use(middleware.Recover).
-		Use(middleware.HTTPSOnly).
 		Use(middleware.LogRequests()).
 		Get("/", index.Render).
 		Get("/reload-template", index.ReloadTemplate).
