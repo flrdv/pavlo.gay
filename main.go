@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/indigo-web/indigo"
 	"github.com/indigo-web/indigo/http"
+	"github.com/indigo-web/indigo/http/status"
 	"github.com/indigo-web/indigo/router/inbuilt"
 	"github.com/indigo-web/indigo/router/inbuilt/middleware"
 	"html/template"
@@ -83,6 +84,30 @@ func (i *Index) ReloadTemplate(request *http.Request) *http.Response {
 	return http.String(request, "reloaded the template successfully")
 }
 
+func antiPathTraversal(next inbuilt.Handler, request *http.Request) *http.Response {
+	if !isSafe(request.Path) {
+		return http.Error(request, status.ErrNotFound)
+	}
+
+	return next(request)
+}
+
+// isSafe checks for path traversal (basically - double dots)
+func isSafe(path string) bool {
+	for len(path) > 0 {
+		dot := strings.IndexByte(path, '.')
+		if dot == -1 {
+			return true
+		}
+
+		if dot < len(path)-1 && path[dot+1] == '.' {
+			return false
+		}
+	}
+
+	return true
+}
+
 func main() {
 	flag.Parse()
 
@@ -97,7 +122,7 @@ func main() {
 		Use(middleware.LogRequests()).
 		Get("/", index.Render).
 		Get("/reload-template", index.ReloadTemplate).
-		Static("/static", "static").
+		Static("/static", "static", antiPathTraversal).
 		Alias("/age", "/static/age.html")
 
 	if *httpsPort < 0 || *httpsPort > math.MaxUint16 {
