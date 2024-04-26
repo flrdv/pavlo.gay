@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"github.com/indigo-web/indigo"
 	"github.com/indigo-web/indigo/http"
-	"github.com/indigo-web/indigo/http/status"
 	"github.com/indigo-web/indigo/router/inbuilt"
 	"github.com/indigo-web/indigo/router/inbuilt/middleware"
 	"html/template"
 	"log"
-	"math"
 	"strings"
 	"sync"
 )
@@ -23,15 +21,15 @@ const (
 
 var (
 	addr = flag.String(
-		"addr", defaultAddr, "address to bind the application",
+		"addr", defaultAddr, "specify the server address",
 	)
 	https = flag.String(
 		"https", "",
-		"sets HTTPS up. Default value uses auto-https, otherwise comma-separated "+
-			"paths to certificate and key must be provided respectively",
+		"specify the https server address. Leave empty to not use HTTPS at all",
 	)
-	httpsPort = flag.Int(
-		"httpsport", 443, "HTTPS port to bind the application",
+	cert = flag.String(
+		"cert", "",
+		"specify custom server certificate instead of autocert",
 	)
 )
 
@@ -84,38 +82,12 @@ func (i *Index) ReloadTemplate(request *http.Request) *http.Response {
 	return http.String(request, "reloaded the template successfully")
 }
 
-func antiPathTraversal(next inbuilt.Handler, request *http.Request) *http.Response {
-	if !isSafe(request.Path) {
-		return http.Error(request, status.ErrNotFound)
-	}
-
-	return next(request)
-}
-
-// isSafe checks for path traversal (basically - double dots)
-func isSafe(path string) bool {
-	for len(path) > 0 {
-		dot := strings.IndexByte(path, '.')
-		if dot == -1 {
-			return true
-		}
-
-		if dot < len(path)-1 && path[dot+1] == '.' {
-			return false
-		}
-		
-		path = path[dot+1:]
-	}
-
-	return true
-}
-
 func main() {
 	flag.Parse()
 
 	index, err := NewIndex(homeTmplPath)
 	if err != nil {
-		log.Fatalf("index: %s", err)
+		log.Fatalf("parse index template: %s", err)
 		return
 	}
 
@@ -124,27 +96,24 @@ func main() {
 		Use(middleware.LogRequests()).
 		Get("/", index.Render).
 		Get("/reload-template", index.ReloadTemplate).
-		Static("/static", "static", antiPathTraversal).
+		Static("/static", "static").
 		Alias("/age", "/static/age.html")
-
-	if *httpsPort < 0 || *httpsPort > math.MaxUint16 {
-		log.Fatalf("bad https port: %d", *httpsPort)
-	}
 
 	app := indigo.New(*addr)
 
-	if len(*https) == 0 {
-		app.AutoHTTPS(uint16(*httpsPort))
-	} else {
-		cert, key := splitPaths(*https)
-		app.HTTPS(uint16(*httpsPort), cert, key)
+	if len(*https) > 0 {
+		if len(*cert) > 0 {
+			certificate, key := splitPaths(*cert)
+			app.HTTPS(*https, certificate, key)
+		} else {
+			app.AutoHTTPS(*https)
+		}
 	}
 
-	app.NotifyOnStart(func() {
-		log.Printf("Running on %s\n", *addr)
-	})
-
-	log.Fatal(app.Serve(r))
+	err = app.OnBind(func(addr string) {
+		log.Printf("listening on %s\n", addr)
+	}).Serve(r)
+	log.Fatal(err)
 }
 
 func splitPaths(paths string) (cert, key string) {
