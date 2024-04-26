@@ -21,7 +21,7 @@ const (
 
 var (
 	addr = flag.String(
-		"addr", defaultAddr, "specify the server address",
+		"http", defaultAddr, "specify the server address",
 	)
 	https = flag.String(
 		"https", "",
